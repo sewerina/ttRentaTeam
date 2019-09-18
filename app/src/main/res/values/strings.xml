@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ttRentaTeam</string>
+
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_about">О программе</string>
+
+    <string name="tv_about">Тестовое задание для Rentateam</string>
+</resources>
