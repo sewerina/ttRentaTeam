@@ -7,4 +7,5 @@
     <string name="title_about">О программе</string>
 
     <string name="tv_about">Тестовое задание для Rentateam</string>
+    <string name="failed_load">Не удалось загрузить данные с сервера!</string>
 </resources>

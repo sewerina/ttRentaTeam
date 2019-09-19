@@ -1,5 +1,9 @@
 package com.github.sewerina.ttrentateam;
 
+import android.app.Application;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -27,14 +31,18 @@ import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainViewModel extends ViewModel {
+public class MainViewModel extends AndroidViewModel {
     private final MutableLiveData<List<UserEntity>> mUsers = new MutableLiveData<>();
     private final MutableLiveData<Boolean> mIsRefresh = new MutableLiveData<>();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
+    private SingleLiveEvent<String> mMessage = new SingleLiveEvent<>();
     private UserDao mUserDao;
     private UserApi mUserApi;
 
-    public MainViewModel() {
+    public MainViewModel(@NonNull Application application) {
+        super(application);
+        mIsRefresh.postValue(false);
+        mMessage.postValue("");
         mUserDao = TaskApp.sUserDao;
 
         Gson gson = new GsonBuilder().create();
@@ -56,6 +64,10 @@ public class MainViewModel extends ViewModel {
         return mIsRefresh;
     }
 
+        public LiveData<String> getMessage() {
+        return mMessage;
+    }
+
     public void load() {
 
         Disposable subscribe = mUserApi.response()
@@ -65,6 +77,13 @@ public class MainViewModel extends ViewModel {
                     @Override
                     public void accept(Disposable disposable) throws Exception {
                         mIsRefresh.postValue(true);
+                    }
+                })
+                .onErrorReturn(new Function<Throwable, Response>() {
+                    @Override
+                    public Response apply(Throwable throwable) throws Exception {
+                        mMessage.postValue(getApplication().getResources().getString(R.string.failed_load));
+                        return new Response();
                     }
                 })
                 .doFinally(new Action() {
@@ -77,7 +96,7 @@ public class MainViewModel extends ViewModel {
                     @Override
                     public SingleSource<List<UserEntity>> apply(Response response) throws Exception {
                         if (response.data == null) {
-                           return Single.just((List<UserEntity>) new ArrayList<UserEntity>());
+                            return Single.just((List<UserEntity>) new ArrayList<UserEntity>());
                         }
                         List<UserEntity> users = response.data;
                         return Single.just(users);

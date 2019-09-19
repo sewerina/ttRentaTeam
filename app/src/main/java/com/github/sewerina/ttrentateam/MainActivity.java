@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -76,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(Boolean refreshing) {
                 mRefreshLayout.setRefreshing(refreshing);
+            }
+        });
+        mViewModel.getMessage().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String message) {
+                if (!message.isEmpty()) {
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                }
             }
         });
 
