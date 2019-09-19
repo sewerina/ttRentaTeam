@@ -20,6 +20,7 @@ import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -28,6 +29,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainViewModel extends ViewModel {
     private final MutableLiveData<List<UserEntity>> mUsers = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> mIsRefresh = new MutableLiveData<>();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
     private UserDao mUserDao;
     private UserApi mUserApi;
@@ -36,9 +38,7 @@ public class MainViewModel extends ViewModel {
         mUserDao = TaskApp.sUserDao;
 
         Gson gson = new GsonBuilder().create();
-
         RxJava2CallAdapterFactory rxAdapter = RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io());
-
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://reqres.in/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -52,11 +52,27 @@ public class MainViewModel extends ViewModel {
         return mUsers;
     }
 
+    public LiveData<Boolean> isRefresh() {
+        return mIsRefresh;
+    }
+
     public void load() {
 
         Disposable subscribe = mUserApi.response()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new Consumer<Disposable>() {
+                    @Override
+                    public void accept(Disposable disposable) throws Exception {
+                        mIsRefresh.postValue(true);
+                    }
+                })
+                .doFinally(new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        mIsRefresh.postValue(false);
+                    }
+                })
                 .flatMap(new Function<Response, SingleSource<List<UserEntity>>>() {
                     @Override
                     public SingleSource<List<UserEntity>> apply(Response response) throws Exception {

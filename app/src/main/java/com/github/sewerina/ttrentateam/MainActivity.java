@@ -14,6 +14,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.github.sewerina.ttrentateam.db.UserEntity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -24,6 +25,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mRefreshLayout;
     private UserAdapter mUserAdapter;
     private MainViewModel mViewModel;
 
@@ -70,6 +72,20 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+        mViewModel.isRefresh().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean refreshing) {
+                mRefreshLayout.setRefreshing(refreshing);
+            }
+        });
+
+        mRefreshLayout = findViewById(R.id.swipeRefresh);
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mViewModel.load();
+            }
+        });
 
         mViewModel.load();
     }
