@@ -2,23 +2,29 @@ package com.github.sewerina.ttrentateam;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.sewerina.ttrentateam.db.UserEntity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.annotation.NonNull;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
-
-import android.view.MenuItem;
-import android.widget.TextView;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-//    private TextView mTextMessage;
 
+    private RecyclerView mRecyclerView;
+    private UserAdapter mUserAdapter;
     private MainViewModel mViewModel;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -32,13 +38,12 @@ public class MainActivity extends AppCompatActivity {
                     return true;
 
                 case R.id.navigation_home:
-//                    mTextMessage.setText(R.string.title_home);
                     return true;
+
                 case R.id.navigation_dashboard:
-//                    mTextMessage.setText(R.string.title_dashboard);
                     return true;
+
                 case R.id.navigation_notifications:
-//                    mTextMessage.setText(R.string.title_notifications);
                     return true;
             }
             return false;
@@ -50,19 +55,77 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         BottomNavigationView navView = findViewById(R.id.nav_view);
-//        mTextMessage = findViewById(R.id.message);
         navView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mUserAdapter = new UserAdapter();
+        mRecyclerView.setAdapter(mUserAdapter);
 
         mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         mViewModel.getUsers().observe(this, new Observer<List<UserEntity>>() {
                     @Override
                     public void onChanged(List<UserEntity> userList) {
-
+                        mUserAdapter.update(userList);
                     }
                 }
         );
 
         mViewModel.load();
+    }
+
+    private class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        private TextView mFirstNameTv;
+        private TextView mLastNameTv;
+
+        private UserEntity mUserEntity;
+
+        public UserHolder(@NonNull View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+
+            mFirstNameTv = itemView.findViewById(R.id.tv_firstName);
+            mLastNameTv = itemView.findViewById(R.id.tv_lastName);
+        }
+
+        void bind(UserEntity entity) {
+            mUserEntity = entity;
+            mFirstNameTv.setText(mUserEntity.firstName);
+            mLastNameTv.setText(mUserEntity.lastName);
+        }
+
+        @Override
+        public void onClick(View v) {
+            startActivity(new Intent(v.getContext(), UserActivity.class));
+        }
+    }
+
+    private class UserAdapter extends RecyclerView.Adapter<UserHolder> {
+        private final List<UserEntity> mUsers = new ArrayList<>();
+
+        @NonNull
+        @Override
+        public UserHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.user_list_item, parent, false);
+            return new UserHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull UserHolder holder, int position) {
+            holder.bind(mUsers.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return mUsers.size();
+        }
+
+        void update(List<UserEntity> entities) {
+            mUsers.clear();
+            mUsers.addAll(entities);
+            notifyDataSetChanged();
+        }
+
     }
 
 }
