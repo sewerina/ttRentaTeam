@@ -1,7 +1,10 @@
 package com.github.sewerina.ttrentateam;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -83,7 +86,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChanged(String message) {
                 if (!message.isEmpty()) {
-                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                    Toast toast = Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
                 }
             }
         });
@@ -92,11 +97,47 @@ public class MainActivity extends AppCompatActivity {
         mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mViewModel.load();
+                load();
             }
         });
 
-        mViewModel.load();
+        load();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        load();
+    }
+
+    private void load() {
+        if (isNetworkAvailableAndConnected()) {
+            mViewModel.loadFromWeb();
+        } else {
+            mViewModel.loadFromDb();
+        }
+    }
+
+    private boolean isNetworkAvailableAndConnected() {
+        ConnectivityManager cm = (ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo networkInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return true;
+            }
+
+            networkInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return true;
+            }
+
+            networkInfo = cm.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private class UserHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -150,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
             mUsers.addAll(entities);
             notifyDataSetChanged();
         }
-
     }
 
 }

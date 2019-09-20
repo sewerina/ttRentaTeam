@@ -6,7 +6,6 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.github.sewerina.ttrentateam.db.UserDao;
 import com.github.sewerina.ttrentateam.db.UserEntity;
@@ -64,12 +63,11 @@ public class MainViewModel extends AndroidViewModel {
         return mIsRefresh;
     }
 
-        public LiveData<String> getMessage() {
+    public LiveData<String> getMessage() {
         return mMessage;
     }
 
-    public void load() {
-
+    public void loadFromWeb() {
         Disposable subscribe = mUserApi.response()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -108,8 +106,41 @@ public class MainViewModel extends AndroidViewModel {
                         mUsers.postValue(userEntities);
                     }
                 })
-                .subscribe();
+                .subscribe(new Consumer<List<UserEntity>>() {
+                    @Override
+                    public void accept(List<UserEntity> userEntities) throws Exception {
+                        Disposable sub = mUserDao.clearTableUser()
+                                .subscribeOn(Schedulers.io())
+                                .andThen(mUserDao.insertAllUsers(userEntities))
+                                .subscribe();
+                        mDisposables.add(sub);
+                    }
+                });
+        mDisposables.add(subscribe);
+    }
 
+    public void loadFromDb() {
+        Disposable subscribe = mUserDao.getAllUsers()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(new Consumer<Disposable>() {
+                    @Override
+                    public void accept(Disposable disposable) throws Exception {
+                        mIsRefresh.postValue(true);
+                    }
+                })
+                .doFinally(new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        mIsRefresh.postValue(false);
+                    }
+                })
+                .subscribe(new Consumer<List<UserEntity>>() {
+                    @Override
+                    public void accept(List<UserEntity> userEntities) throws Exception {
+                        mUsers.postValue(userEntities);
+                    }
+                });
         mDisposables.add(subscribe);
     }
 
@@ -118,4 +149,6 @@ public class MainViewModel extends AndroidViewModel {
         super.onCleared();
         mDisposables.dispose();
     }
+
+
 }
