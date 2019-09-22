@@ -8,4 +8,19 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+
+    <style name="DefaultAvatar">
+        <item name="imageValue">@drawable/def</item>
+        <item name="emailText">-</item>
+        <item name="firstNameText">Имя</item>
+        <item name="lastNameText">Фамилия</item>
+        <item name="textStyle">@style/TextStyle</item>
+    </style>
+
+
+    <style name="TextStyle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/textColor</item>
+    </style>
+
 </resources>

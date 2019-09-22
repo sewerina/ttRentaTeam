@@ -52,7 +52,6 @@ public class MainViewModel extends AndroidViewModel {
                 .addCallAdapterFactory(rxAdapter)
                 .build();
         mUserApi = retrofit.create(UserApi.class);
-
     }
 
     public LiveData<List<UserEntity>> getUsers() {
@@ -149,6 +148,5 @@ public class MainViewModel extends AndroidViewModel {
         super.onCleared();
         mDisposables.dispose();
     }
-
 
 }

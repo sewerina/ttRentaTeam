@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <declare-styleable name="AvatarView">
+        <attr name="imageValue" format="reference" />
+        <attr name="emailText" format="string|reference" />
+        <attr name="firstNameText" format="string|reference" />
+        <attr name="lastNameText" format="string|reference" />
+        <attr name="textStyle" format="reference" />
+    </declare-styleable>
+
+</resources>
